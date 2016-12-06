@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>GitHub Language Breakdown</title>
+  </head>
+  <body>
+    <div id="chart_div" style="width: 900px; height: 500px"></div>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages' :['treemap']});
+      google.charts.setOnLoadCallback(fetchData);
+
+      // Build data structure required by chart
+      function fetchData() {
+        var url = "https://api.github.com/users/fmauricios/repos";
+        console.log(url);
+
+        fetch(url).then(function(response) {
+          return response.json();
+        }).then(function(repos) {
+          var totals = repos.reduce(function(accumulator, repo) {
+            if (accumulator[repo.language]) {
+              accumulator[repo.language]++;
+            } else {
+              accumulator[repo.language] = 1;
+            }
+            return accumulator;
+          }, {});
+
+          var totalArray = Object.keys(totals).map(function(language) {
+            return [language, 'Global', totals[language]];
+          });
+
+          var headers = [
+            ['Language', 'Parent', 'Num Repos'],
+            ['Global', null, 0]
+          ]
+
+          var dataArray = headers.concat(totalArray);
+          drawChart(dataArray);
+        });
+      }
+
+      function drawChart(dataArray) {
+        var data = google.visualization.arrayToDataTable(dataArray);
+
+        tree = new google.visualization.TreeMap(document.getElementById('chart_div'));
+
+        tree.draw(data, {
+          minColor: '#f00',
+          midColor: '#ddd',
+          maxColor: '#0d0',
+          headerHeight: 15,
+          fontColor: 'black',
+          showScale: true,
+          generateTooltip: showStaticTooltip
+        });
+      }
+
+      function showStaticTooltip(row, size, value) {
+        console.log(row, size, value);
+        return '<div id="size">' + size + '</div>';
+      }
+    </script>
+
+  </body>
+</html>
